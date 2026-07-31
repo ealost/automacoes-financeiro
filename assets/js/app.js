@@ -16,6 +16,7 @@ let db = null, auth = null;
 let PROJECTS = [];
 let currentProject = null;
 let editMode = false;
+let SOURCE = "seed";
 
 /* ---------- firebase init ---------- */
 function initFirebase() {
@@ -52,6 +53,17 @@ async function saveFase(projectId, fase) {
   if (!db) throw new Error("Firestore não configurado");
   const { id, ...data } = fase;
   await setDoc(doc(db, "projects", projectId, "fases", fase.n), data, { merge: true });
+}
+
+async function seedFirestore() {
+  if (!db) throw new Error("Firestore não configurado");
+  for (const p of window.SEED.projects) {
+    const { fases, ...meta } = p;
+    await setDoc(doc(db, "projects", p.id), meta, { merge: true });
+    for (const f of fases) {
+      await setDoc(doc(db, "projects", p.id, "fases", f.n), f, { merge: true });
+    }
+  }
 }
 
 /* ---------- helpers ---------- */
@@ -222,6 +234,7 @@ function mountAuthBar() {
   bar.className = "authbar"; bar.setAttribute("data-authbar", "");
   bar.innerHTML = `
     <span class="mono" data-savestate></span>
+    <button class="btn btn--sm" data-seed hidden>Popular dados iniciais</button>
     <button class="btn btn--outline btn--sm" data-login>Entrar para editar</button>
     <span class="authbar__user" hidden><span class="mono" data-who></span>
       <button class="btn btn--outline btn--sm" data-logout>Sair</button></span>`;
@@ -249,6 +262,21 @@ function mountAuthBar() {
   modal.addEventListener("click", (e) => { if (e.target === modal) close(); });
   bar.querySelector("[data-logout]").addEventListener("click", () => auth && signOut(auth));
 
+  bar.querySelector("[data-seed]").addEventListener("click", async (e) => {
+    if (!confirm("Gravar os dados iniciais (fases e tarefas) no Firestore?")) return;
+    e.target.disabled = true; setSaveState("saving");
+    try {
+      await seedFirestore();
+      const r = await loadProjects();
+      PROJECTS = r.projects; SOURCE = r.source;
+      currentProject = PROJECTS.find((p) => p.id === document.body.dataset.project) || PROJECTS[0];
+      setSaveState("saved"); e.target.hidden = true;
+      renderProject();
+    } catch (err) {
+      console.error(err); setSaveState("error"); e.target.disabled = false;
+    }
+  });
+
   modal.querySelector("[data-loginform]").addEventListener("submit", async (e) => {
     e.preventDefault();
     const err = modal.querySelector("[data-loginerr]"); err.hidden = true;
@@ -269,6 +297,8 @@ function mountAuthBar() {
       const u = bar.querySelector(".authbar__user");
       u.hidden = !user;
       if (user) bar.querySelector("[data-who]").textContent = user.email;
+      // botão de popular: só quando logado e o Firestore ainda está vazio
+      bar.querySelector("[data-seed]").hidden = !(user && SOURCE !== "firestore");
       if (currentProject) renderProject();
     });
   }
@@ -321,7 +351,7 @@ function wireMascot() {
   wireMascot();
   mountAuthBar();
   const { source, projects, error } = await loadProjects();
-  PROJECTS = projects;
+  PROJECTS = projects; SOURCE = source;
 
   const banner = document.querySelector("[data-banner]");
   if (banner) {
