@@ -1,0 +1,40 @@
+name: Deploy Firebase Hosting
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Injeta a config pública do Firebase a partir de um secret do repositório,
+      # gerando assets/js/firebase-config.js no momento do build.
+      # Crie o secret FIREBASE_WEB_CONFIG (Settings → Secrets and variables → Actions)
+      # com o conteúdo JS: window.FIREBASE_CONFIG = { ... };
+      - name: Write firebase-config.js
+        if: ${{ secrets.FIREBASE_WEB_CONFIG != '' }}
+        env:
+          FIREBASE_WEB_CONFIG: ${{ secrets.FIREBASE_WEB_CONFIG }}
+        run: printf '%s' "$FIREBASE_WEB_CONFIG" > assets/js/firebase-config.js
+
+      # Só publica quando os secrets do Firebase já existem.
+      # Antes disso o workflow roda verde (pulando este passo).
+      - name: Deploy to Firebase Hosting
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' && secrets.FIREBASE_PROJECT_ID != '' }}
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
+
+      - name: Aviso (secrets ausentes)
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT == '' || secrets.FIREBASE_PROJECT_ID == '' }}
+        run: echo "::notice::Deploy pulado — configure os secrets FIREBASE_SERVICE_ACCOUNT e FIREBASE_PROJECT_ID para publicar."

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Conciliação Bancária BB · Automações Financeiro</title>
+  <meta name="description" content="Conciliação Bancária Coligada 1 (Banco do Brasil): do RPA de tela para automação genuína com n8n, APIs do BB e webservices do RM." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/hum.css" />
+</head>
+<body data-page="project" data-project="conciliacao-bb">
+  <a class="skip" href="#main">Pular para o conteúdo</a>
+
+  <header class="nav">
+    <div class="shell nav__in">
+      <a class="brand" href="../index.html"><span class="brand__dot"></span> Automações · Financeiro</a>
+      <nav class="nav__links" aria-label="Principal">
+        <a href="../index.html">Projetos</a>
+        <a href="conciliacao-bb.html" aria-current="page">Conciliação BB</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section pj-hero">
+      <div class="shell">
+        <span class="eyebrow">Projeto · Coligada 1 · Banco do Brasil</span>
+        <h1>Conciliação Bancária, do <em>RPA de tela</em> para automação de verdade.</h1>
+        <p class="pj-hero__lede">Hoje um robô clica no site do BB e no client do RM. O plano: trocar cliques por chamadas de API do Banco do Brasil e webservices do TOTVS RM, orquestrados no n8n — mantendo a conferência humana no fim, porque os dados não batem por motivos internos.</p>
+        <div class="pj-stats" data-stats></div>
+        <div class="banner" data-banner>Carregando dados do projeto…</div>
+      </div>
+    </section>
+
+    <section class="section section--band">
+      <div class="shell">
+        <span class="eyebrow">De → Para</span>
+        <h2 style="font-size:var(--text-2xl);margin-top:var(--space-sm)">O que muda no fluxo</h2>
+        <div class="flow">
+          <div class="flow__col">
+            <h3>Hoje (As-Is · RPA de tela)</h3>
+            <div class="flow__box">
+              <ul>
+                <li>Lê planilha DE-PARA na pasta de rede</li>
+                <li>Navega no site do BB e baixa retorno CNAB + extrato PDF</li>
+                <li>Emite comprovantes em PDF</li>
+                <li>Digita lançamentos no client do RM</li>
+                <li>Gera relatório FS004 e envia e-mail</li>
+              </ul>
+            </div>
+          </div>
+          <div class="flow__arrow" aria-hidden="true">→</div>
+          <div class="flow__col">
+            <h3>Proposto (To-Be · n8n + APIs)</h3>
+            <div class="flow__box" style="border-color:var(--color-accent-deep)">
+              <ul>
+                <li>DE-PARA em base consultável (Firestore/SQL)</li>
+                <li>BB API: retorno CNAB + extrato + tarifas</li>
+                <li>Concilia tarifas × DE-PARA (n8n)</li>
+                <li>RM WebService: importa, lança, contabiliza (evt. 22), gera FS004</li>
+                <li>Relatório de execução + e-mail com 3 anexos</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <span class="eyebrow">Fases · 0.0 → 6.0</span>
+        <h2 style="font-size:var(--text-2xl);margin-top:var(--space-sm)">O caminho, em etapas</h2>
+        <div class="stages" data-stages></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="shell foot__in">
+      <p class="foot__statement">D-1 de terça a sexta, D-3 nas segundas. Todo dia útil, sem alguém clicando.</p>
+      <div class="foot__meta">
+        <span>Dono do processo: Fernando Javorski · Financeiro Castilho</span>
+        <div class="foot__team">
+          <span class="chip"><span class="chip__dot" style="background:var(--p-evandro)"></span> Evandro</span>
+          <span class="chip"><span class="chip__dot" style="background:var(--p-fabricio)"></span> Fabrício</span>
+          <span class="chip"><span class="chip__dot" style="background:var(--p-mariana)"></span> Mariana</span>
+          <span class="chip"><span class="chip__dot" style="background:var(--p-larissa)"></span> Larissa</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <button class="mascot" type="button" aria-label="Marca da equipe"></button>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/firebase-config.js"></script>
+  <script type="module" src="../assets/js/app.js"></script>
+</body>
+</html>

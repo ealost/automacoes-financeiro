@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // A página pública apenas LÊ os projetos e suas fases.
+    // A escrita fica bloqueada pelo cliente — atualize via console, Admin SDK
+    // ou o script de seed (scripts/seed.mjs), que usa credenciais de serviço.
+    match /projects/{projectId} {
+      allow read: if true;
+      allow write: if false;
+
+      match /fases/{faseId} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+  }
+}

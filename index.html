@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Automações · Financeiro Castilho</title>
+  <meta name="description" content="Painel dos projetos de automação do Financeiro — status, fases e responsáveis." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/hum.css" />
+</head>
+<body data-page="hub">
+  <a class="skip" href="#main">Pular para o conteúdo</a>
+
+  <header class="nav">
+    <div class="shell nav__in">
+      <a class="brand" href="index.html"><span class="brand__dot"></span> Automações · Financeiro</a>
+      <nav class="nav__links" aria-label="Principal">
+        <a href="index.html" aria-current="page">Projetos</a>
+        <a href="projetos/conciliacao-bb.html">Conciliação BB</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section hub-hero">
+      <div class="shell">
+        <span class="eyebrow">Financeiro · Construtora Castilho</span>
+        <h1>Automações do Financeiro, <em>indexadas por projeto</em>.</h1>
+        <p>Cada projeto reúne suas fases, tarefas e responsáveis. O acompanhamento é aqui — status real, sem teatro de número.</p>
+        <div class="hub-meta">
+          <span class="chip"><span class="chip__dot" style="background:var(--p-evandro)"></span> Evandro</span>
+          <span class="chip"><span class="chip__dot" style="background:var(--p-fabricio)"></span> Fabrício</span>
+          <span class="chip"><span class="chip__dot" style="background:var(--p-mariana)"></span> Mariana</span>
+          <span class="chip"><span class="chip__dot" style="background:var(--p-larissa)"></span> Larissa</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="banner" data-banner>Carregando projetos…</div>
+        <div class="grid-projects" data-projects></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="shell foot__in">
+      <p class="foot__statement">Menos trabalho manual. Mais controle. Um projeto de cada vez.</p>
+      <div class="foot__meta">
+        <span>Financeiro · Castilho · financeiro@castilho.com.br</span>
+        <span class="mono">n8n · BB API · TOTVS RM · Firebase</span>
+      </div>
+    </div>
+  </footer>
+
+  <button class="mascot" type="button" aria-label="Marca da equipe"></button>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
