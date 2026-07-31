@@ -75,6 +75,7 @@
 
 /* ============================================================= RESET */
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; } /* vence .modal/.btn/.authbar__user que definem display */
 html, body { overflow-x: clip; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 body {
