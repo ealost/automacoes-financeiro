@@ -1,18 +1,13 @@
-/* Configuração do Firebase (Web).
- * Como você já tem o projeto criado: pegue estes valores em
- *   Firebase Console → Configurações do projeto → Seus apps → App da Web (SDK setup and configuration).
+/* Configuração do Firebase (Web) — projeto automacao-financeiro-8bbda.
  *
  * Estes valores são PÚBLICOS por natureza (ficam no cliente). A proteção real dos dados vem
- * das regras do Firestore (ver firestore.rules) — não de esconder esta config.
- *
- * Enquanto os placeholders não forem preenchidos, a página cai automaticamente nos dados
- * semente (assets/js/data.js) e continua funcionando para demonstração.
+ * das regras do Firestore (ver firestore.rules) e do Authentication — não de esconder esta config.
  */
 window.FIREBASE_CONFIG = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-  projectId: "SEU_PROJETO",
-  storageBucket: "SEU_PROJETO.appspot.com",
-  messagingSenderId: "SEU_SENDER_ID",
-  appId: "SEU_APP_ID",
+  apiKey: "AIzaSyDFvadyvyo3ovF9_kmlAoTW_o0qSHRVtSM",
+  authDomain: "automacao-financeiro-8bbda.firebaseapp.com",
+  projectId: "automacao-financeiro-8bbda",
+  storageBucket: "automacao-financeiro-8bbda.firebasestorage.app",
+  messagingSenderId: "541244013533",
+  appId: "1:541244013533:web:0ac6a7f63b6f43835ad434",
 };
