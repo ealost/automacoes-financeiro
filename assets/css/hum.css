@@ -316,6 +316,43 @@ em, .hl {
   margin-block: var(--space-md); }
 .banner[data-kind="err"] { border-color: var(--color-accent-3); }
 
+/* ============================================================= EDIT / AUTH */
+.btn--sm { padding: 0.45rem 0.85rem; font-size: var(--text-xs); }
+
+.authbar {
+  position: fixed; left: 50%; bottom: clamp(0.8rem, 3vw, 1.5rem); transform: translateX(-50%);
+  z-index: 30; display: flex; align-items: center; gap: var(--space-sm);
+  background: var(--color-paper); border: 1.5px solid var(--color-ink);
+  border-radius: var(--radius-pill); padding: 0.4rem 0.6rem;
+  box-shadow: 0 12px 28px -14px oklch(20% 0.012 250 / 0.35);
+}
+.authbar__user { display: inline-flex; align-items: center; gap: var(--space-sm); }
+[data-savestate] { color: var(--color-ink-2); }
+[data-savestate][data-s="saved"] { color: oklch(45% 0.14 150); }
+[data-savestate][data-s="error"] { color: var(--color-accent-3); }
+
+.modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
+  background: oklch(20% 0.012 250 / 0.4); padding: var(--space-md); }
+.modal__box { background: var(--color-paper); border: 1.5px solid var(--color-ink);
+  border-radius: var(--radius-card); padding: var(--space-lg); width: min(380px, 100%);
+  box-shadow: 0 24px 60px -20px oklch(20% 0.012 250 / 0.5); }
+.fld { display: block; margin-bottom: var(--space-sm); }
+.fld span { display: block; font-family: var(--font-label); font-size: var(--text-xs);
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-ink-2); margin-bottom: 0.3rem; }
+.fld input { width: 100%; padding: 0.6rem 0.75rem; font: inherit;
+  border: 1.5px solid var(--color-paper-3); border-radius: var(--radius-input); background: var(--color-paper); }
+.fld input:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 1px; border-color: var(--color-ink); }
+.loginerr { color: var(--color-accent-3); font-size: var(--text-sm); margin: 0.4rem 0 0; }
+
+.edit-in, .edit-sel { font: inherit; padding: 0.4rem 0.55rem; border-radius: 8px;
+  border: 1.5px solid var(--color-paper-3); background: var(--color-paper); color: var(--color-ink); }
+.edit-in { flex: 1 1 220px; min-width: 0; font-weight: 500; }
+.edit-in:focus-visible, .edit-sel:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 1px; border-color: var(--color-ink); }
+.task-del { border: 1.5px solid var(--color-paper-3); background: var(--color-paper);
+  width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; line-height: 1;
+  color: var(--color-ink-2); flex: 0 0 auto; }
+.task-del:hover { border-color: var(--color-accent-3); color: var(--color-accent-3); }
+
 /* ============================================================= A11Y / MOTION */
 :focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .skip { position: absolute; left: -999px; }

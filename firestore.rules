@@ -1,16 +1,30 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // A página pública apenas LÊ os projetos e suas fases.
-    // A escrita fica bloqueada pelo cliente — atualize via console, Admin SDK
-    // ou o script de seed (scripts/seed.mjs), que usa credenciais de serviço.
+    // Leitura pública (a página é aberta). Escrita só para usuários AUTENTICADOS.
+    // Como o login é e-mail/senha e NÃO há auto-cadastro na página, apenas os
+    // usuários que você criar no Firebase Console (Evandro, Fabrício, Mariana,
+    // Larissa) conseguem editar.
+    //
+    // Quer travar ainda mais? Troque `signedIn()` por `allowedEmail()` abaixo e
+    // preencha a lista de e-mails.
+    function signedIn() { return request.auth != null; }
+    function allowedEmail() {
+      return request.auth != null && request.auth.token.email in [
+        "evandro.ferreira@castilho.com.br"
+        // , "fabricio@castilho.com.br"
+        // , "mariana@castilho.com.br"
+        // , "larissa@castilho.com.br"
+      ];
+    }
+
     match /projects/{projectId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if signedIn();
 
       match /fases/{faseId} {
         allow read: if true;
-        allow write: if false;
+        allow write: if signedIn();
       }
     }
   }
