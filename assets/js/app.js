@@ -269,8 +269,18 @@ function refreshSeedBtn(bar, user) {
   b.textContent = (SOURCE !== "firestore") ? "Popular dados iniciais" : "Atualizar estrutura";
 }
 
+function rerender() {
+  const page = document.body.dataset.page;
+  if (page === "hub") {
+    const root = document.querySelector("[data-projects]");
+    if (root) renderHub(root, PROJECTS);
+  } else if (page === "project") {
+    renderProject();
+  }
+}
+
 function mountAuthBar() {
-  if (document.querySelector("[data-authbar]") || document.body.dataset.page !== "project") return;
+  if (document.querySelector("[data-authbar]") || !["hub", "project"].includes(document.body.dataset.page)) return;
   const bar = document.createElement("div");
   bar.className = "authbar"; bar.setAttribute("data-authbar", "");
   bar.innerHTML = `
@@ -316,7 +326,7 @@ function mountAuthBar() {
       currentProject = PROJECTS.find((p) => p.id === wantedId()) || PROJECTS[0];
       setSaveState("saved"); e.target.disabled = false;
       refreshSeedBtn(bar, auth && auth.currentUser);
-      renderProject();
+      rerender();
     } catch (err) { console.error(err); setSaveState("error"); e.target.disabled = false; }
   });
 
@@ -339,7 +349,7 @@ function mountAuthBar() {
       u.hidden = !user;
       if (user) bar.querySelector("[data-who]").textContent = user.email;
       refreshSeedBtn(bar, user);
-      if (currentProject) renderProject();
+      rerender();
     });
   }
   window.__refreshSeed = () => refreshSeedBtn(bar, auth && auth.currentUser);
