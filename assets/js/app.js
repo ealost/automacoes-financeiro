@@ -3,7 +3,7 @@
  */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, query, orderBy, doc, setDoc,
+  getFirestore, collection, getDocs, query, orderBy, doc, setDoc, deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut,
@@ -55,8 +55,10 @@ async function saveFase(projectId, fase) {
   await setDoc(doc(db, "projects", projectId, "fases", fase.n), data, { merge: true });
 }
 
+/* grava a estrutura do SEED e remove projetos que não fazem parte dela (trilhas antigas) */
 async function seedFirestore() {
   if (!db) throw new Error("Firestore não configurado");
+  const seedIds = new Set(window.SEED.projects.map((p) => p.id));
   for (const p of window.SEED.projects) {
     const { fases, ...meta } = p;
     await setDoc(doc(db, "projects", p.id), meta, { merge: true });
@@ -64,6 +66,21 @@ async function seedFirestore() {
       await setDoc(doc(db, "projects", p.id, "fases", f.n), f, { merge: true });
     }
   }
+  const snap = await getDocs(collection(db, "projects"));
+  for (const d of snap.docs) {
+    if (!seedIds.has(d.id)) {
+      const fs = await getDocs(collection(d.ref, "fases"));
+      for (const f of fs.docs) await deleteDoc(f.ref);
+      await deleteDoc(d.ref);
+    }
+  }
+}
+
+/* estrutura do Firestore == estrutura do código? */
+function structureMatches() {
+  const cur = new Set(PROJECTS.map((p) => p.id));
+  const seed = window.SEED.projects.map((p) => p.id);
+  return SOURCE === "firestore" && seed.length === cur.size && seed.every((id) => cur.has(id));
 }
 
 /* ---------- helpers ---------- */
@@ -76,6 +93,7 @@ const TEAM = (window.SEED.team || []).map((t) => t.nome);
 const initials = (nome) => (window.SEED.team.find((t) => t.nome === nome)?.iniciais)
   || esc(nome).slice(0, 2).toUpperCase();
 const slug = (n) => String(n).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const wantedId = () => new URLSearchParams(location.search).get("id") || document.body.dataset.project;
 
 function allTasks(project) { return (project.fases || []).flatMap((f) => f.tasks || []); }
 function progress(tasks) {
@@ -118,9 +136,33 @@ function renderHub(root, projects) {
 /* ---------- render: PROJECT ---------- */
 function renderProject() {
   const project = currentProject;
+  if (!project) return;
   const tasks = allTasks(project);
   const pct = progress(tasks);
   const byStatus = (s) => tasks.filter((t) => t.status === s).length;
+
+  // hero dinâmico
+  const set = (sel, txt) => { const el = document.querySelector(sel); if (el) el.textContent = txt; };
+  set("[data-hero-eyebrow]", `Trilha · ${project.area || "Automação"}`);
+  set("[data-hero-title]", project.nome);
+  set("[data-hero-lede]", project.descricao || project.resumo || "");
+  document.title = `${project.nome} · Automações Financeiro`;
+
+  // fluxo As-Is / To-Be
+  const flowSec = document.querySelector("[data-flow-section]");
+  const flowEl = document.querySelector("[data-flow]");
+  if (flowSec && flowEl) {
+    const f = project.fluxo;
+    if (f && (f.asis || f.tobe)) {
+      flowSec.hidden = false;
+      flowEl.innerHTML = `
+        <div class="flow__col"><h3>Hoje (As-Is · manual)</h3>
+          <div class="flow__box"><ul>${(f.asis || []).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div></div>
+        <div class="flow__arrow" aria-hidden="true">→</div>
+        <div class="flow__col"><h3>Proposto (To-Be · n8n + APIs)</h3>
+          <div class="flow__box" style="border-color:var(--color-accent-deep)"><ul>${(f.tobe || []).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div></div>`;
+    } else { flowSec.hidden = true; }
+  }
 
   const statsEl = document.querySelector("[data-stats]");
   if (statsEl) {
@@ -143,8 +185,7 @@ function renderProject() {
         </div>
         <p class="stage__desc">${esc(f.desc)}</p>
         <ul class="tasks">
-          ${(f.tasks || []).map((t, ti) => editMode
-            ? editTaskRow(t, fi, ti) : viewTaskRow(t)).join("")}
+          ${(f.tasks || []).map((t, ti) => editMode ? editTaskRow(t, fi, ti) : viewTaskRow(t)).join("")}
         </ul>
         ${editMode ? `<button class="btn btn--outline btn--sm" data-add="${fi}" style="margin-top:.6rem">+ tarefa</button>` : ""}
       </div>`).join("");
@@ -188,8 +229,8 @@ function wireEditing() {
     if (!k) return;
     const fase = currentProject.fases[fi];
     fase.tasks[ti][k] = e.target.value;
-    await persist(fase, e.target);
-    if (k === "status" || k === "titulo") renderProject(); // atualiza contagens/risco
+    await persist(fase);
+    if (k === "status" || k === "titulo") renderProject();
   });
 
   stagesEl.addEventListener("click", async (e) => {
@@ -197,28 +238,21 @@ function wireEditing() {
       const li = e.target.closest("[data-fi]");
       const fase = currentProject.fases[+li.dataset.fi];
       fase.tasks.splice(+li.dataset.ti, 1);
-      await persist(fase, e.target);
-      renderProject();
+      await persist(fase); renderProject();
     }
     if (e.target.matches("[data-add]")) {
       const fase = currentProject.fases[+e.target.dataset.add];
       fase.tasks = fase.tasks || [];
       fase.tasks.push({ titulo: "Nova tarefa", responsavel: TEAM[0], status: "todo" });
-      await persist(fase, e.target);
-      renderProject();
+      await persist(fase); renderProject();
     }
   });
 }
 
-async function persist(fase, el) {
+async function persist(fase) {
   setSaveState("saving");
-  try {
-    await saveFase(currentProject.id, fase);
-    setSaveState("saved");
-  } catch (err) {
-    console.error(err);
-    setSaveState("error");
-  }
+  try { await saveFase(currentProject.id, fase); setSaveState("saved"); }
+  catch (err) { console.error(err); setSaveState("error"); }
 }
 function setSaveState(s) {
   const el = document.querySelector("[data-savestate]");
@@ -228,6 +262,13 @@ function setSaveState(s) {
 }
 
 /* ---------- auth UI ---------- */
+function refreshSeedBtn(bar, user) {
+  const b = bar.querySelector("[data-seed]");
+  const show = !!user && CONFIGURED && !structureMatches();
+  b.hidden = !show;
+  b.textContent = (SOURCE !== "firestore") ? "Popular dados iniciais" : "Atualizar estrutura";
+}
+
 function mountAuthBar() {
   if (document.querySelector("[data-authbar]") || document.body.dataset.page !== "project") return;
   const bar = document.createElement("div");
@@ -263,18 +304,20 @@ function mountAuthBar() {
   bar.querySelector("[data-logout]").addEventListener("click", () => auth && signOut(auth));
 
   bar.querySelector("[data-seed]").addEventListener("click", async (e) => {
-    if (!confirm("Gravar os dados iniciais (fases e tarefas) no Firestore?")) return;
+    const msg = SOURCE !== "firestore"
+      ? "Gravar os dados iniciais (projetos e fases) no Firestore?"
+      : "Atualizar a estrutura no Firestore? Isto grava os projetos/fases do código e remove trilhas fora da estrutura atual.";
+    if (!confirm(msg)) return;
     e.target.disabled = true; setSaveState("saving");
     try {
       await seedFirestore();
       const r = await loadProjects();
       PROJECTS = r.projects; SOURCE = r.source;
-      currentProject = PROJECTS.find((p) => p.id === document.body.dataset.project) || PROJECTS[0];
-      setSaveState("saved"); e.target.hidden = true;
+      currentProject = PROJECTS.find((p) => p.id === wantedId()) || PROJECTS[0];
+      setSaveState("saved"); e.target.disabled = false;
+      refreshSeedBtn(bar, auth && auth.currentUser);
       renderProject();
-    } catch (err) {
-      console.error(err); setSaveState("error"); e.target.disabled = false;
-    }
+    } catch (err) { console.error(err); setSaveState("error"); e.target.disabled = false; }
   });
 
   modal.querySelector("[data-loginform]").addEventListener("submit", async (e) => {
@@ -284,9 +327,7 @@ function mountAuthBar() {
       await signInWithEmailAndPassword(auth,
         modal.querySelector("[data-email]").value, modal.querySelector("[data-pass]").value);
       close();
-    } catch (ex) {
-      err.textContent = "E-mail ou senha inválidos."; err.hidden = false;
-    }
+    } catch (ex) { err.textContent = "E-mail ou senha inválidos."; err.hidden = false; }
   });
 
   if (CONFIGURED) {
@@ -297,11 +338,11 @@ function mountAuthBar() {
       const u = bar.querySelector(".authbar__user");
       u.hidden = !user;
       if (user) bar.querySelector("[data-who]").textContent = user.email;
-      // botão de popular: só quando logado e o Firestore ainda está vazio
-      bar.querySelector("[data-seed]").hidden = !(user && SOURCE !== "firestore");
+      refreshSeedBtn(bar, user);
       if (currentProject) renderProject();
     });
   }
+  window.__refreshSeed = () => refreshSeedBtn(bar, auth && auth.currentUser);
 }
 
 /* ---------- micro-interactions ---------- */
@@ -324,7 +365,7 @@ function animateBars(scope) {
 function animateCounters(scope) {
   scope.querySelectorAll("[data-count]").forEach((el) => {
     const target = parseInt(el.dataset.count, 10) || 0;
-    const suffix = (el.dataset.count.match(/\D+$/) || [""])[0] || (el.textContent.match(/[^0-9]+$/) || [""])[0] || "";
+    const suffix = (el.dataset.count.match(/\D+$/) || [""])[0] || "";
     if (reduce) { el.textContent = target + suffix; return; }
     const t0 = performance.now(), dur = 900;
     const tick = (now) => {
@@ -367,7 +408,8 @@ function wireMascot() {
   if (page === "hub") {
     renderHub(document.querySelector("[data-projects]"), projects);
   } else if (page === "project") {
-    currentProject = projects.find((p) => p.id === document.body.dataset.project) || projects[0];
-    if (currentProject) renderProject();
+    currentProject = projects.find((p) => p.id === wantedId()) || projects[0];
+    renderProject();
+    if (window.__refreshSeed) window.__refreshSeed();
   }
 })();

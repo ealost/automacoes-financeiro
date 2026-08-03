@@ -1,9 +1,11 @@
 /* Dados semente — espelham o modelo do Firestore.
- * A página usa isto como fallback quando o Firebase não está configurado/acessível,
- * e como referência de forma dos documentos (collection "projects" + subcollection "tasks").
+ * Fallback quando o Firebase não está configurado/acessível e referência de forma
+ * dos documentos (collection "projects" + subcollection "fases").
  *
  * status por tarefa: "todo" | "doing" | "done" | "blocked"
  * responsavel: "Evandro" | "Fabrício" | "Mariana" | "Larissa"
+ *
+ * Cada trilha é um PROJETO separado (fluxos diferentes de API e de n8n).
  */
 window.SEED = {
   team: [
@@ -14,83 +16,205 @@ window.SEED = {
   ],
 
   projects: [
+    /* ============================================ PAGAMENTOS EM LOTE — ENVIO */
     {
-      id: "conciliacao-bb",
-      nome: "Conciliação Bancária — Coligada 1 (Banco do Brasil)",
-      resumo: "Migração do RPA de tela para automação genuína com n8n, APIs do BB e webservices do RM.",
+      id: "pag-lote-envio",
+      nome: "Pagamentos em Lote — Envio",
+      resumo: "Envio de borderôs do RM ao banco via API Pagamentos em Lote, com aprovação por lote (start manual).",
+      descricao: "Rotina de start manual: pega o borderô do RM, formata, envia ao banco, lê o retorno do processamento e leva para aprovação por lote. Reprovar exclui o borderô; aprovar efetiva o pagamento. O painel operacional de autorização será um portal à parte (usuários do Financeiro via AD).",
       area: "Financeiro",
-      status: "doing",
-      href: "projetos/conciliacao-bb.html",
-      sistemas: ["n8n", "BB API", "TOTVS RM", "Firestore"],
-      // fases = numbered stages (Narrative Workflow)
+      status: "todo",
+      href: "projetos/projeto.html?id=pag-lote-envio",
+      sistemas: ["n8n", "BB API (Pag. Lote)", "TOTVS RM"],
+      fluxo: {
+        asis: [
+          "Gera borderô no RM",
+          "Envia o arquivo pelo site do BB",
+          "Confere e aprova manualmente",
+          "Sem trilha de aprovação estruturada",
+        ],
+        tobe: [
+          "Pega borderô do RM (webservice)",
+          "Formata para o layout da API Pag. Lote",
+          "Envia o lote ao banco",
+          "Lê o retorno do processamento",
+          "Aprovação por lote (painel/portal futuro)",
+          "Aprovar efetiva o pagamento / reprovar exclui o borderô",
+        ],
+      },
       fases: [
-        {
-          n: "0.0", titulo: "Discovery & Acessos", accent: "var(--p-evandro)",
-          desc: "Levantar credenciais das APIs do BB para a conta da Coligada 1, endpoints/licença de webservices do RM e ambiente de homologação.",
+        { n: "0.0", titulo: "Discovery & Acessos", accent: "var(--p-evandro)",
+          desc: "Confirmar contratação da API Pagamentos em Lote (envio), credenciais/mTLS e ambiente de homologação.",
           tasks: [
-            { titulo: "Habilitar aplicação no portal developers.bb.com.br e obter client_id/secret + app-key", responsavel: "Evandro", status: "doing" },
-            { titulo: "Confirmar quais APIs o BB já tem contratadas (Extratos, Pagamentos em Lote/retorno)", responsavel: "Evandro", status: "todo" },
-            { titulo: "Levantar versão/licença de webservices do RM (DataServer SOAP / REST RM.Host)", responsavel: "Fabrício", status: "todo" },
-            { titulo: "Definir e disponibilizar ambiente de homologação (n8n + acesso RM DEV)", responsavel: "Evandro", status: "todo" },
-          ],
-        },
-        {
-          n: "1.0", titulo: "Fundação de Dados", accent: "var(--p-mariana)",
-          desc: "Tirar o DE-PARA da planilha de rede e colocá-lo em base consultável/editável; modelar o log de execução.",
+            { titulo: "Confirmar API Pagamentos em Lote (envio) contratada para a conta", responsavel: "Evandro", status: "todo" },
+            { titulo: "DECISÃO PENDENTE: onde o borderô é criado/excluído (RM x sistema novo)", responsavel: "Evandro", status: "blocked" },
+            { titulo: "Obter credenciais OAuth2 + app-key e certificado mTLS", responsavel: "Evandro", status: "todo" },
+          ] },
+        { n: "1.0", titulo: "Extração do borderô (RM)", accent: "var(--p-fabricio)",
+          desc: "Obter o borderô do RM por webservice/DataServer e mapear campos e lotes.",
           tasks: [
-            { titulo: "Migrar planilha DE-PARA (de = extrato BB / para = lançamento RM) para tabela", responsavel: "Mariana", status: "todo" },
-            { titulo: "Manter interface simples para o Financeiro incluir novas tarifas", responsavel: "Mariana", status: "todo" },
-            { titulo: "Modelar log de execução (data, arquivos, mensagens do RM, resultado)", responsavel: "Mariana", status: "todo" },
-          ],
-        },
-        {
-          n: "2.0", titulo: "Integração Banco do Brasil (n8n)", accent: "var(--p-fabricio)",
-          desc: "Substituir a navegação no site por chamadas de API: retorno CNAB, extrato e tarifas.",
+            { titulo: "Obter borderô via webservice/DataServer do RM", responsavel: "Fabrício", status: "todo" },
+            { titulo: "Mapear campos e granularidade por lote", responsavel: "Fabrício", status: "todo" },
+          ] },
+        { n: "2.0", titulo: "Formatação & Envio", accent: "var(--p-fabricio)",
+          desc: "Montar o layout da API, enviar o lote e capturar o protocolo de envio.",
           tasks: [
-            { titulo: "Implementar OAuth2 (client credentials + app-key) e mTLS para produção", responsavel: "Fabrício", status: "todo" },
-            { titulo: "Obter retorno de pagamentos (CNAB240) via API — substituir 'Troca de arquivos'", responsavel: "Fabrício", status: "todo" },
-            { titulo: "Obter extrato da conta corrente via API Extratos (substituir PDF)", responsavel: "Fabrício", status: "todo" },
-            { titulo: "Extrair tarifas do extrato para conciliação", responsavel: "Fabrício", status: "todo" },
-          ],
-        },
-        {
-          n: "3.0", titulo: "Integração TOTVS RM", accent: "var(--p-fabricio)",
-          desc: "Importar retorno, lançar tarifas em extrato de caixa, contabilizar (evento 22) e gerar o FS004 via serviço.",
+            { titulo: "Formatar borderô no layout da API Pagamentos em Lote", responsavel: "Fabrício", status: "todo" },
+            { titulo: "Enviar lote ao banco e capturar protocolo", responsavel: "Fabrício", status: "todo" },
+          ] },
+        { n: "3.0", titulo: "Retorno do processamento & Aprovação", accent: "var(--p-larissa)",
+          desc: "Ler o status do processamento e aplicar a regra de aprovação/reprovação por lote (painel/portal futuro).",
           tasks: [
-            { titulo: "Importar retorno bancário CNAB240 via processo/DataServer do RM", responsavel: "Fabrício", status: "todo" },
-            { titulo: "Lançar tarifas em Extrato de Caixa (conta 000001, CC 1.1.001, depto 1.2.02, classif. 2.3.010102)", responsavel: "Fabrício", status: "todo" },
-            { titulo: "Contabilizar com evento contábil 22 via webservice", responsavel: "Fabrício", status: "todo" },
-            { titulo: "Gerar relatório FS004 02 (extrato diário de caixa) por serviço", responsavel: "Fabrício", status: "todo" },
-          ],
-        },
-        {
-          n: "4.0", titulo: "Orquestração & Regras", accent: "var(--p-larissa)",
-          desc: "Fluxo n8n de ponta a ponta: lógica de data D-1/D-3, conciliação × DE-PARA, exceções/retries e e-mail.",
+            { titulo: "Ler retorno do processamento do banco (por lote)", responsavel: "Larissa", status: "todo" },
+            { titulo: "Regra: reprovar exclui o borderô (granularidade por lote)", responsavel: "Larissa", status: "todo" },
+            { titulo: "Regra: aprovar efetiva o pagamento", responsavel: "Larissa", status: "todo" },
+            { titulo: "Especificar painel de autorização (portal futuro, usuários AD)", responsavel: "Larissa", status: "todo" },
+          ] },
+        { n: "4.0", titulo: "Orquestração n8n", accent: "var(--p-larissa)",
+          desc: "Fluxo n8n com start manual, encadeamento e tratamento de exceções.",
           tasks: [
-            { titulo: "Cron Seg–Sex + cálculo de data (D-1 Ter–Sex / D-3 Seg)", responsavel: "Larissa", status: "todo" },
-            { titulo: "Conciliar tarifas do extrato contra o DE-PARA (sempre valor positivo no RM)", responsavel: "Larissa", status: "todo" },
-            { titulo: "Tratar exceções do PDD (2–3 tentativas, log, e-mail ao Financeiro)", responsavel: "Larissa", status: "todo" },
-            { titulo: "Gerar relatório de execução (só tarifas lançadas) + e-mail com 3 anexos", responsavel: "Larissa", status: "todo" },
+            { titulo: "Rotina de envio com start manual", responsavel: "Larissa", status: "todo" },
+            { titulo: "Exceções e tentativas (retries)", responsavel: "Larissa", status: "todo" },
+          ] },
+        { n: "5.0", titulo: "Logs & Auditoria", accent: "var(--p-mariana)",
+          desc: "Registrar as conciliações internas do envio.",
+          tasks: [
+            { titulo: "Log: lançamentos × borderô criado", responsavel: "Mariana", status: "todo" },
+            { titulo: "Log: borderô × pagamentos aprovados", responsavel: "Mariana", status: "todo" },
+          ] },
+        { n: "6.0", titulo: "Testes & Homologação", accent: "var(--p-mariana)",
+          desc: "Massa de casos (sucesso, erros e exceções) e aprovação do key user.",
+          tasks: [
+            { titulo: "Montar massa de testes", responsavel: "Mariana", status: "todo" },
+            { titulo: "Homologação com key user", responsavel: "Mariana", status: "todo" },
+          ] },
+      ],
+    },
+
+    /* ============================================ PAGAMENTOS EM LOTE — RETORNO */
+    {
+      id: "pag-lote-retorno",
+      nome: "Pagamentos em Lote — Retorno",
+      resumo: "Importa o retorno CNAB240 dos pagamentos no RM (arquivo ou webservice) e faz a baixa.",
+      descricao: "Captura o arquivo de retorno CNAB240 dos lotes de pagamento, importa no RM (por arquivo ou webservice) e realiza a baixa dos títulos.",
+      area: "Financeiro",
+      status: "todo",
+      href: "projetos/projeto.html?id=pag-lote-retorno",
+      sistemas: ["n8n", "BB API (Pag. Lote)", "TOTVS RM"],
+      fluxo: {
+        asis: [
+          "Baixa o retorno em Troca de arquivos (site BB)",
+          "Importa manualmente no RM",
+          "Faz a baixa manual",
+        ],
+        tobe: [
+          "Captura o CNAB240 via API",
+          "Importa no RM (arquivo ou webservice)",
+          "Baixa dos títulos",
+          "Log de importação",
+        ],
+      },
+      fases: [
+        { n: "0.0", titulo: "Discovery & Acessos", accent: "var(--p-evandro)",
+          desc: "Definir a forma de importação no RM e o acesso ao retorno.",
+          tasks: [
+            { titulo: "DECISÃO PENDENTE: importar no RM por arquivo ou por webservice", responsavel: "Evandro", status: "blocked" },
+            { titulo: "Confirmar acesso à API de retorno (Pagamentos em Lote)", responsavel: "Evandro", status: "todo" },
+          ] },
+        { n: "1.0", titulo: "Captura do retorno CNAB240", accent: "var(--p-fabricio)",
+          desc: "Obter o arquivo de retorno dos lotes via API.",
+          tasks: [
+            { titulo: "Obter retorno CNAB240 via API Pagamentos em Lote", responsavel: "Fabrício", status: "todo" },
+          ] },
+        { n: "2.0", titulo: "Importação no RM & Baixa", accent: "var(--p-fabricio)",
+          desc: "Importar o CNAB240 no RM e realizar a baixa dos títulos.",
+          tasks: [
+            { titulo: "Importar CNAB240 no RM (arquivo/webservice)", responsavel: "Fabrício", status: "todo" },
+            { titulo: "Baixa dos títulos e captura da mensagem de importação", responsavel: "Fabrício", status: "todo" },
+          ] },
+        { n: "3.0", titulo: "Orquestração n8n", accent: "var(--p-larissa)",
+          desc: "Fluxo n8n com tratamento de exceções e log.",
+          tasks: [
+            { titulo: "Rotina de retorno no n8n", responsavel: "Larissa", status: "todo" },
+            { titulo: "Exceções, tentativas e log", responsavel: "Larissa", status: "todo" },
+          ] },
+        { n: "4.0", titulo: "Testes & Homologação", accent: "var(--p-mariana)",
+          desc: "Massa de casos e homologação.",
+          tasks: [
+            { titulo: "Montar massa de testes e homologar", responsavel: "Mariana", status: "todo" },
+          ] },
+      ],
+    },
+
+    /* ============================================ EXTRATOS — RETORNO */
+    {
+      id: "extratos-retorno",
+      nome: "Extratos — Retorno",
+      resumo: "Captura o extrato via API, normaliza histórico (tarifas e rentabilidade de saldo) por DE-PARA e lança no RM.",
+      descricao: "Captura o extrato de conta corrente pela API do BB, normaliza o histórico via procv na planilha DE-PARA (tarifas e rentabilidade de saldo) e faz o lançamento/conciliação no RM. Mantém a conferência humana no fim, porque os dados não batem por motivos internos.",
+      area: "Financeiro",
+      status: "todo",
+      href: "projetos/projeto.html?id=extratos-retorno",
+      sistemas: ["n8n", "BB API (Extratos)", "TOTVS RM", "Firestore"],
+      fluxo: {
+        asis: [
+          "Baixa o extrato PDF no site do BB",
+          "Captura as tarifas manualmente",
+          "Lança no RM (extrato de caixa)",
+          "Gera FS004 e envia e-mail",
+        ],
+        tobe: [
+          "Captura o extrato via API",
+          "Normaliza histórico por DE-PARA (tarifas + rentabilidade de saldo)",
+          "Lança no RM (contabilização evt. 22)",
+          "Gera FS004 + e-mail + conferência humana",
+        ],
+      },
+      fases: [
+        { n: "0.0", titulo: "Discovery & Acessos", accent: "var(--p-evandro)",
+          desc: "Confirmar a API de Extratos e o ambiente de homologação.",
+          tasks: [
+            { titulo: "Confirmar API Extratos contratada para a conta", responsavel: "Evandro", status: "todo" },
+            { titulo: "Definir ambiente de homologação (n8n + RM DEV)", responsavel: "Evandro", status: "todo" },
+          ] },
+        { n: "1.0", titulo: "Fundação DE-PARA", accent: "var(--p-mariana)",
+          desc: "Migrar a planilha DE-PARA para base consultável e cobrir tarifas e rentabilidade de saldo.",
+          tasks: [
+            { titulo: "Migrar planilha DE-PARA para base (de = extrato / para = RM)", responsavel: "Mariana", status: "todo" },
+            { titulo: "Cobrir normalização de tarifas e rentabilidade de saldo (mesmo procv)", responsavel: "Mariana", status: "todo" },
+            { titulo: "Interface para o Financeiro incluir novos históricos/tarifas", responsavel: "Mariana", status: "todo" },
+          ] },
+        { n: "2.0", titulo: "Captura do extrato (BB API)", accent: "var(--p-fabricio)",
+          desc: "Obter o extrato de conta corrente pela API, com OAuth2/mTLS.",
+          tasks: [
+            { titulo: "Implementar OAuth2 + app-key + mTLS", responsavel: "Fabrício", status: "todo" },
+            { titulo: "Obter extrato de conta corrente via API Extratos", responsavel: "Fabrício", status: "todo" },
+          ] },
+        { n: "3.0", titulo: "Normalização & Conciliação", accent: "var(--p-larissa)",
+          desc: "Aplicar o procv do DE-PARA e identificar tarifas e rentabilidade (sempre valor positivo no RM).",
+          tasks: [
+            { titulo: "Aplicar procv DE-PARA para normalizar histórico", responsavel: "Larissa", status: "todo" },
+            { titulo: "Identificar tarifas e rentabilidade de saldo", responsavel: "Larissa", status: "todo" },
+          ] },
+        { n: "4.0", titulo: "Lançamento no RM", accent: "var(--p-fabricio)",
+          desc: "Lançar em extrato de caixa com os parâmetros fixos, contabilizar e gerar o FS004.",
+          tasks: [
+            { titulo: "Lançar em Extrato de Caixa (conta 000001, CC 1.1.001, depto 1.2.02, classif. 2.3.010102)", responsavel: "Fabrício", status: "todo" },
+            { titulo: "Contabilizar com evento contábil 22", responsavel: "Fabrício", status: "todo" },
+            { titulo: "Gerar relatório FS004 02 (extrato diário de caixa)", responsavel: "Fabrício", status: "todo" },
+          ] },
+        { n: "5.0", titulo: "Orquestração n8n & Conferência", accent: "var(--p-larissa)",
+          desc: "Rotina com lógica de data, e-mail e conferência humana.",
+          tasks: [
+            { titulo: "Rotina com cálculo de data (D-1 Ter–Sex / D-3 Seg)", responsavel: "Larissa", status: "todo" },
+            { titulo: "E-mail de finalização com anexos (BB + RM + execução)", responsavel: "Larissa", status: "todo" },
             { titulo: "Manter conferência humana (dados não batem por motivos internos)", responsavel: "Larissa", status: "todo" },
-          ],
-        },
-        {
-          n: "5.0", titulo: "Testes & Homologação", accent: "var(--p-mariana)",
-          desc: "Massa de 10 casos (sucesso, erros e exceções) e aprovação do key user.",
+          ] },
+        { n: "6.0", titulo: "Testes & Homologação", accent: "var(--p-mariana)",
+          desc: "Massa de 10 casos e homologação do key user.",
           tasks: [
-            { titulo: "Montar massa de testes com 10 casos (incl. exceções do PDD)", responsavel: "Mariana", status: "todo" },
-            { titulo: "Rodar homologação com key user (Layon / Fabricio Bobek)", responsavel: "Mariana", status: "todo" },
-          ],
-        },
-        {
-          n: "6.0", titulo: "Deploy & Monitoramento", accent: "var(--p-evandro)",
-          desc: "Produção, agendamento, observabilidade e esta página de acompanhamento.",
-          tasks: [
-            { titulo: "Publicar workflow n8n em produção com credenciais seguras", responsavel: "Evandro", status: "todo" },
-            { titulo: "Configurar deploy da página (GitHub Actions → Firebase Hosting)", responsavel: "Evandro", status: "doing" },
-            { titulo: "Monitorar execuções e alertas de falha", responsavel: "Evandro", status: "todo" },
-          ],
-        },
+            { titulo: "Montar massa de testes (incl. exceções) e homologar", responsavel: "Mariana", status: "todo" },
+          ] },
       ],
     },
   ],
