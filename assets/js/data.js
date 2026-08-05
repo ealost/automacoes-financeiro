@@ -217,5 +217,67 @@ window.SEED = {
           ] },
       ],
     },
+
+    /* ============================================ EXTRATOS — AVISO DE RECEBIMENTO */
+    {
+      id: "extratos-aviso-recebimento",
+      nome: "Extratos — Aviso de Recebimento",
+      resumo: "Consulta o extrato de 2 em 2h (8h–18h) em dias úteis, filtra recebimentos e envia e-mail quando houver.",
+      descricao: "Rotina agendada: a cada 2 horas, das 8h às 18h em dias úteis, consulta o extrato pela API, filtra os recebimentos (entradas) e, havendo recebimento, formata e dispara um e-mail de aviso ao Financeiro. Sem recebimento, não notifica.",
+      area: "Financeiro",
+      status: "todo",
+      href: "projetos/projeto.html?id=extratos-aviso-recebimento",
+      sistemas: ["n8n", "BB API (Extratos)", "E-mail"],
+      fluxo: {
+        asis: [
+          "Consulta o extrato manualmente ao longo do dia",
+          "Identifica os recebimentos na mão",
+          "Avisa por e-mail quando lembra",
+        ],
+        tobe: [
+          "Agenda a cada 2h (8h–18h, dias úteis)",
+          "Consulta o extrato via API",
+          "Filtra os recebimentos (entradas)",
+          "Havendo recebimento: formata e envia e-mail",
+          "Sem recebimento: não notifica",
+        ],
+      },
+      fases: [
+        { n: "0.0", titulo: "Discovery & Acessos", accent: "var(--p-evandro)",
+          desc: "Reaproveitar a API de Extratos, definir destinatários e ambiente.",
+          tasks: [
+            { titulo: "Reaproveitar integração/credenciais da trilha Extratos — Retorno", responsavel: "Evandro", status: "todo" },
+            { titulo: "Definir destinatários do e-mail de aviso (Financeiro)", responsavel: "Evandro", status: "todo" },
+          ] },
+        { n: "1.0", titulo: "Consulta agendada", accent: "var(--p-larissa)",
+          desc: "Agendar a cada 2h das 8h às 18h em dias úteis, com controle para não duplicar avisos.",
+          tasks: [
+            { titulo: "Cron a cada 2h (8h–18h) apenas em dias úteis", responsavel: "Larissa", status: "todo" },
+            { titulo: "Controle de janela/idempotência (não reavisar o mesmo recebimento)", responsavel: "Larissa", status: "todo" },
+          ] },
+        { n: "2.0", titulo: "Captura do extrato (BB API)", accent: "var(--p-fabricio)",
+          desc: "Obter o extrato pela API, reaproveitando OAuth2/mTLS.",
+          tasks: [
+            { titulo: "Consultar extrato via API Extratos (reuso OAuth2/mTLS)", responsavel: "Fabrício", status: "todo" },
+          ] },
+        { n: "3.0", titulo: "Filtro de recebimentos", accent: "var(--p-larissa)",
+          desc: "Identificar apenas as entradas/recebimentos do período consultado.",
+          tasks: [
+            { titulo: "Filtrar lançamentos de recebimento (entradas)", responsavel: "Larissa", status: "todo" },
+            { titulo: "Marcar recebimentos já avisados para não repetir", responsavel: "Larissa", status: "todo" },
+          ] },
+        { n: "4.0", titulo: "Formatação & E-mail", accent: "var(--p-larissa)",
+          desc: "Formatar o aviso e enviar por e-mail somente quando houver recebimento.",
+          tasks: [
+            { titulo: "Formatar aviso de recebimento (valor, pagador, data)", responsavel: "Larissa", status: "todo" },
+            { titulo: "Enviar e-mail só quando houver recebimento", responsavel: "Larissa", status: "todo" },
+          ] },
+        { n: "5.0", titulo: "Testes & Homologação", accent: "var(--p-mariana)",
+          desc: "Casos com e sem recebimento, e validação do agendamento.",
+          tasks: [
+            { titulo: "Testar cenários (com/sem recebimento) e o agendamento 2h", responsavel: "Mariana", status: "todo" },
+          ] },
+      ],
+    },
   ],
 };
