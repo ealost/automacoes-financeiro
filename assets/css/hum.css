@@ -194,7 +194,8 @@ em, .hl {
 /* progress bar */
 .bar { height: 10px; border-radius: 999px; background: var(--color-paper-3); overflow: hidden; }
 .bar__fill { height: 100%; border-radius: 999px; background: var(--color-mint);
-  transition: width 900ms var(--ease-snap); }
+  transform-origin: left; animation: bar-grow 900ms var(--ease-snap) both; }
+@keyframes bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* status pill */
 .status { font-family: var(--font-label); font-size: var(--text-xs); text-transform: uppercase;

@@ -122,14 +122,13 @@ function renderHub(root, projects) {
       </div>
       <h2 class="pj__title">${esc(p.nome)}</h2>
       <p class="pj__desc">${esc(p.resumo)}</p>
-      <div class="bar" aria-hidden="true"><span class="bar__fill" data-w="${pct}" style="width:0"></span></div>
+      <div class="bar" aria-hidden="true"><span class="bar__fill" style="width:${pct}%"></span></div>
       <div class="pj__foot">
         <span class="pj__people">${peopleStack(tasks)}</span>
         <span class="mono">${pct}% · ${tasks.length} tarefas</span>
       </div>
     </a>`;
   }).join("");
-  animateBars(root);
   observeReveals(root);
 }
 
@@ -364,13 +363,6 @@ function observeReveals(scope) {
     ents.forEach((en, i) => { if (en.isIntersecting) { setTimeout(() => en.target.classList.add("is-in"), i * 50); io.unobserve(en.target); } });
   }, { threshold: 0.12 });
   els.forEach((e) => io.observe(e));
-}
-function animateBars(scope) {
-  scope.querySelectorAll(".bar__fill").forEach((el) => {
-    const w = el.dataset.w + "%";
-    if (reduce) { el.style.width = w; return; }
-    requestAnimationFrame(() => { el.style.width = w; });
-  });
 }
 function animateCounters(scope) {
   scope.querySelectorAll("[data-count]").forEach((el) => {
